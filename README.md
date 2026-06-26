@@ -1,12 +1,12 @@
 # Installation
 
 ```
-git clone https://github.com/unvalidor/ANStoDomain.git
+git clone https://github.com/unvalidor/ASNtoDomain.git
 ```
 
 # Usage
 
 ```bash
-cd ANStoDomain
+cd ASNtoDomain
 bash asntodomain.sh target.com
 ```
