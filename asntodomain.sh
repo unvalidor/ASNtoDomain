@@ -115,7 +115,7 @@ echo "[+] Total IPs:"
 wc -l ips.txt
 
 echo "[+] Probing HTTP/HTTPS services..."
-cat ips.txt | httpx -sc 200 -silent -threads 200 -o alive-http.txt
+cat ips.txt | httpx -sc 200 -silent -threads 200 -td -o alive-http.txt
 
 echo "[+] Alive HTTP services:"
 wc -l alive-http.txt
