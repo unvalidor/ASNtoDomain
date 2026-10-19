@@ -16,6 +16,8 @@ check_go() {
             sudo apt update && sudo apt install -y golang-go
         elif command -v yum &>/dev/null; then
             sudo yum install -y golang
+        elif command -v brew &>/dev/null; then
+            brew install go
         else
             error "Unsupported package manager. Please install Go manually."
             exit 1
@@ -50,6 +52,8 @@ check_jq() {
             sudo apt install -y jq
         elif command -v yum &>/dev/null; then
             sudo yum install -y jq
+        elif command -v brew &>/dev/null; then
+            brew install jq
         fi
     fi
 }
@@ -88,45 +92,33 @@ fi
 DOMAIN=$1
 OUTDIR="recon-$DOMAIN"
 
-mkdir -p "$OUTDIR"
-cd "$OUTDIR" || exit
+mkdir -p $OUTDIR
+cd $OUTDIR || exit
 
-info "Target: $DOMAIN"
+echo "[+] Target: $DOMAIN"
 
-info "Extracting ASN & CIDR ranges..."
-if ! echo "$DOMAIN" | asnmap -silent -o asn.txt; then
-    error "asnmap failed"
-    exit 1
-fi
 
-grep -Eo "([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]+" asn.txt > cidr.txt
+echo "[+] Extracting ASN & CIDR ranges..."
+echo $DOMAIN | asnmap -silent -o asn.txt
 
-info "Found CIDRs:"
-wc -l < cidr.txt
 
-if [ ! -s cidr.txt ]; then
-    error "No CIDRs found. Please check the domain."
-    exit 1
-fi
+cat asn.txt | grep -Eo "([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]+" > cidr.txt
 
-info "Expanding CIDR to IPs..."
-if ! mapcidr -silent -l cidr.txt -o ips.txt; then
-    error "mapcidr failed"
-    exit 1
-fi
+echo "[+] Found CIDRs:"
+wc -l cidr.txt
 
-info "Total IPs:"
-wc -l < ips.txt
 
-info "Probing HTTP/HTTPS services..."
-if ! httpx -sc 200 -silent -threads 200 -l ips.txt -o alive-http.txt; then
-    error "httpx failed"
-    exit 1
-fi
+echo "[+] Expanding CIDR to IPs..."
+cat cidr.txt | mapcidr -silent -o ips.txt
 
-info "Alive HTTP services:"
-wc -l < alive-http.txt
+echo "[+] Total IPs:"
+wc -l ips.txt
 
-echo
-info "Done ✅"
-info "Results saved in: $OUTDIR"
+echo "[+] Probing HTTP/HTTPS services..."
+cat ips.txt | httpx -sc 200 -silent -threads 200 -o alive-http.txt
+
+echo "[+] Alive HTTP services:"
+wc -l alive-http.txt
+
+echo "[+] Done ✅"
+echo "Results saved in: $OUTDIR"
